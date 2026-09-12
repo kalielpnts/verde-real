@@ -1,1 +1,5 @@
-json { "name": "verde-real", "image": "mcr.microsoft.com/devcontainers/universal:2", "postCreateCommand": "if [ -n \"$NGROK_AUTHTOKEN\" ]; then npx --yes ngrok config add-authtoken $NGROK_AUTHTOKEN; fi" } 
+{
+  "name": "verde-real",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "postCreateCommand": "if [ -n \"$NGROK_AUTHTOKEN\" ]; then npx --yes ngrok config add-authtoken $NGROK_AUTHTOKEN; fi"
+}
