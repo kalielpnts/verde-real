@@ -76,3 +76,38 @@ export async function alternarCurtida(usuarioId: string, postId: string, curtido
     if (error) throw new Error(error.message);
   }
 }
+
+export async function criarPost(dados: {
+  autorId: string;
+  conteudo: string;
+  categoria: string;
+  midiaUrl?: string | null;
+  tipoMidia?: 'imagem' | 'video' | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  empresaId?: string | null;
+}) {
+  const { error } = await supabase.from('posts').insert({
+    autor_id: dados.autorId,
+    conteudo: dados.conteudo,
+    categoria: dados.categoria,
+    midia_url: dados.midiaUrl ?? null,
+    tipo_midia: dados.tipoMidia ?? null,
+    latitude: dados.latitude ?? null,
+    longitude: dados.longitude ?? null,
+    empresa_id: dados.empresaId ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function buscarEmpresas(termo: string) {
+  if (!termo.trim()) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nome, avatar_url')
+    .eq('tipo', 'empresa')
+    .ilike('nome', `%${termo.trim()}%`)
+    .limit(8);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
