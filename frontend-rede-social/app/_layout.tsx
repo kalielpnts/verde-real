@@ -1,6 +1,10 @@
+import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
+import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono';
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -11,8 +15,27 @@ export const unstable_settings = {
   anchor: 'index',
 };
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    SpaceMono_400Regular,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <AuthProvider>
