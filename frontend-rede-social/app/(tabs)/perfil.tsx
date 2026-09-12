@@ -11,10 +11,11 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { rotuloConquista } from '@/src/constants/categorias';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { api } from '@/src/services/api';
+import { buscarRanking } from '@/src/services/ranking';
 import { RankingItem } from '@/src/types';
 
 export default function PerfilScreen() {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const router = useRouter();
   const { usuario, token, sair, atualizarUsuario } = useAuth();
@@ -24,7 +25,7 @@ export default function PerfilScreen() {
 
   const carregarStats = useCallback(async () => {
     try {
-      const lista: RankingItem[] = await api.ranking();
+      const lista: RankingItem[] = await buscarRanking();
       setMinhasStats(lista.find((item) => item.id === usuario?.id) ?? null);
     } catch (error) {
       console.error(error);

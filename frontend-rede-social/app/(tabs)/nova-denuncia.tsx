@@ -25,7 +25,7 @@ import { api } from '@/src/services/api';
 import { Categoria } from '@/src/types';
 
 export default function NovaDenunciaScreen() {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const router = useRouter();
   const { token } = useAuth();

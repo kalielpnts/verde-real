@@ -14,7 +14,7 @@ export function EstadoVazio({
   titulo: string;
   descricao: string;
 }) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
   return (

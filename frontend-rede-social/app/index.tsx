@@ -8,7 +8,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function Index() {
   const { usuario, carregando } = useAuth();
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
   if (carregando) {
