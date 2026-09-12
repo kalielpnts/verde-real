@@ -6,19 +6,23 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import { Botao } from '@/src/components/ui/Botao';
+import { Cartao } from '@/src/components/ui/Cartao';
+import { Emblema } from '@/src/components/ui/Emblema';
+import { Colors, Fonts } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { rotuloConquista } from '@/src/constants/categorias';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { api } from '@/src/services/api';
+import { atualizarAvatar } from '@/src/services/profile';
 import { buscarRanking } from '@/src/services/ranking';
+import { enviarMidia } from '@/src/services/upload';
 import { RankingItem } from '@/src/types';
 
 export default function PerfilScreen() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const router = useRouter();
-  const { usuario, token, sair, atualizarUsuario } = useAuth();
+  const { usuario, sair, atualizarUsuario } = useAuth();
 
   const [minhasStats, setMinhasStats] = useState<RankingItem | null>(null);
   const [enviandoAvatar, setEnviandoAvatar] = useState(false);
@@ -37,7 +41,7 @@ export default function PerfilScreen() {
   }, [carregarStats]);
 
   async function handleTrocarAvatar() {
-    if (!token) return;
+    if (!usuario) return;
 
     const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissao.granted) {
@@ -57,18 +61,11 @@ export default function PerfilScreen() {
     const imagem = resultado.assets[0];
     setEnviandoAvatar(true);
     try {
-      const form = new FormData();
       const nomeArquivo = imagem.fileName ?? `avatar.${imagem.uri.split('.').pop()}`;
-      // @ts-expect-error React Native aceita esse formato de arquivo no FormData
-      form.append('midia', {
-        uri: imagem.uri,
-        name: nomeArquivo,
-        type: imagem.mimeType ?? 'image/jpeg',
-      });
-
-      const respostaUpload = await api.uploadMidia(token, form);
-      const perfilAtualizado = await api.atualizarPerfil(token, respostaUpload.midiaUrl);
-      atualizarUsuario({ avatarUrl: perfilAtualizado.avatarUrl });
+      const contentType = imagem.mimeType ?? 'image/jpeg';
+      const url = await enviarMidia(usuario.id, imagem.uri, nomeArquivo, contentType);
+      await atualizarAvatar(usuario.id, url);
+      atualizarUsuario({ avatarUrl: url });
     } catch (error) {
       Alert.alert('Ops', error instanceof Error ? error.message : 'Não foi possível trocar o avatar.');
     } finally {
@@ -98,7 +95,7 @@ export default function PerfilScreen() {
 
       <View style={styles.topo}>
         <TouchableOpacity
-          style={[styles.avatar, { backgroundColor: cores.tintSoft }]}
+          style={[styles.avatar, { backgroundColor: cores.tintSoft, borderColor: cores.border }]}
           onPress={handleTrocarAvatar}
           disabled={enviandoAvatar}>
           {enviandoAvatar ? (
@@ -106,7 +103,7 @@ export default function PerfilScreen() {
           ) : usuario.avatarUrl ? (
             <Image source={{ uri: usuario.avatarUrl }} style={styles.avatarImg} />
           ) : (
-            <Text style={[styles.avatarIniciais, { color: cores.tint }]}>
+            <Text style={[styles.avatarIniciais, { color: cores.tint, fontFamily: Fonts.bold }]}>
               {usuario.nome.charAt(0).toUpperCase()}
             </Text>
           )}
@@ -115,30 +112,38 @@ export default function PerfilScreen() {
           </View>
         </TouchableOpacity>
 
-        <Text style={[styles.nome, { color: cores.text }]}>{usuario.nome}</Text>
-        <Text style={[styles.email, { color: cores.icon }]}>{usuario.email}</Text>
+        <Text style={[styles.nome, { color: cores.text, fontFamily: Fonts.bold }]}>{usuario.nome}</Text>
+        <Text style={[styles.email, { color: cores.icon, fontFamily: Fonts.regular }]}>{usuario.email}</Text>
 
-        {minhasStats && (
-          <View style={[styles.seloContainer, { backgroundColor: cores.tintSoft }]}>
-            <Text style={[styles.seloTexto, { color: cores.tint }]}>
-              {rotuloConquista(minhasStats.totalDenuncias)}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      <View style={[styles.cardStats, { backgroundColor: cores.card, borderColor: cores.border }]}>
-        <Ionicons name="megaphone-outline" size={22} color={cores.tint} />
-        <View>
-          <Text style={[styles.statsNumero, { color: cores.text }]}>{minhasStats?.totalDenuncias ?? 0}</Text>
-          <Text style={[styles.statsLabel, { color: cores.icon }]}>denúncias publicadas</Text>
+        <View style={{ marginTop: 12 }}>
+          <Emblema
+            texto={usuario.tipo === 'empresa' ? 'Conta empresa' : rotuloConquista(minhasStats?.totalDenuncias ?? 0)}
+            icone={usuario.tipo === 'empresa' ? 'business-outline' : 'ribbon-outline'}
+            variante="destaque"
+          />
         </View>
       </View>
 
-      <TouchableOpacity style={[styles.sairBotao, { borderColor: cores.danger }]} onPress={handleSair}>
-        <Ionicons name="log-out-outline" size={18} color={cores.danger} />
-        <Text style={[styles.sairTexto, { color: cores.danger }]}>Sair da conta</Text>
-      </TouchableOpacity>
+      <Cartao>
+        <View style={styles.statsLinha}>
+          <Ionicons name="megaphone-outline" size={22} color={cores.tint} />
+          <View>
+            <Text style={[styles.statsNumero, { color: cores.text, fontFamily: Fonts.bold }]}>
+              {minhasStats?.totalDenuncias ?? 0}
+            </Text>
+            <Text style={[styles.statsLabel, { color: cores.icon, fontFamily: Fonts.mono }]}>
+              DENÚNCIAS PUBLICADAS
+            </Text>
+          </View>
+        </View>
+      </Cartao>
+
+      <Botao
+        titulo="Sair da conta"
+        onPress={handleSair}
+        variante="perigo"
+        style={{ marginTop: 24 }}
+      />
     </SafeAreaView>
   );
 }
@@ -150,12 +155,13 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   avatarImg: { width: '100%', height: '100%' },
-  avatarIniciais: { fontSize: 34, fontWeight: '800' },
+  avatarIniciais: { fontSize: 34 },
   editarIcone: {
     position: 'absolute',
     bottom: 0,
@@ -168,29 +174,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-  nome: { fontSize: 20, fontWeight: '800', marginTop: 14 },
+  nome: { fontSize: 20, marginTop: 14 },
   email: { fontSize: 13, marginTop: 2 },
-  seloContainer: { marginTop: 10, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 },
-  seloTexto: { fontSize: 13, fontWeight: '700' },
-  cardStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 30,
-  },
-  statsNumero: { fontSize: 22, fontWeight: '800' },
-  statsLabel: { fontSize: 12 },
-  sairBotao: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  sairTexto: { fontSize: 15, fontWeight: '700' },
+  statsLinha: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  statsNumero: { fontSize: 22 },
+  statsLabel: { fontSize: 10, letterSpacing: 0.5 },
 });
