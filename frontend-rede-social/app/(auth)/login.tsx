@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -17,15 +18,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Emblema } from '@/src/components/ui/Emblema';
 import { Botao } from '@/src/components/ui/Botao';
-import { Colors, Fonts, Radius } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Fonts, Marca, Radius } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 
 type Aba = 'entrar' | 'cadastro' | 'recuperar';
 
 export default function LoginScreen() {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const cores = Colors[scheme];
   const router = useRouter();
   const { entrar, cadastrar, recuperarSenha } = useAuth();
 
@@ -87,53 +85,48 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: cores.tint === cores.tint ? cores.background : cores.background }]}>
-      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {/* Painel escuro de marca, igual ao lado esquerdo do site */}
-          <View style={[styles.hero, { backgroundColor: cores.secondary }]}>
-            <Text style={styles.heroEmoji}>🌱</Text>
+          {/* Painel escuro de marca — cor FIXA, igual ao site, não muda com o tema do celular */}
+          <View style={styles.hero}>
+            <View style={styles.heroIconCirculo}>
+              <Ionicons name="leaf" size={26} color={Marca.heroBg} />
+            </View>
             <Text style={[styles.heroTitulo, { fontFamily: Fonts.bold }]}>Verde Real</Text>
-            <Text style={[styles.heroTag, { fontFamily: Fonts.mono, color: cores.tintSoft }]}>
-              TRANSPARÊNCIA AMBIENTAL
-            </Text>
+            <Text style={[styles.heroTag, { fontFamily: Fonts.mono }]}>TRANSPARÊNCIA AMBIENTAL</Text>
             <Text style={[styles.heroFrase, { fontFamily: Fonts.regular }]}>
               "O futuro é verde,{'\n'}mas só se for verdadeiro."
             </Text>
           </View>
 
-          {/* Painel claro do formulário */}
-          <View style={[styles.formPainel, { backgroundColor: cores.card }]}>
-            <Text style={[styles.formTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>
-              Acessar plataforma
-            </Text>
+          {/* Painel do formulário — cor FIXA (branco), igual ao site */}
+          <View style={styles.formPainel}>
+            <Text style={[styles.formTitulo, { fontFamily: Fonts.bold }]}>Acessar plataforma</Text>
 
-            <View style={[styles.abas, { borderColor: cores.border }]}>
+            <View style={styles.abas}>
               {(['entrar', 'cadastro', 'recuperar'] as Aba[]).map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={styles.abaBotao}
-                  onPress={() => setAba(item)}>
+                <TouchableOpacity key={item} style={styles.abaBotao} onPress={() => setAba(item)}>
                   <Text
                     style={[
                       styles.abaTexto,
-                      { fontFamily: Fonts.semibold, color: aba === item ? cores.tint : cores.icon },
+                      { fontFamily: Fonts.semibold, color: aba === item ? Marca.tint : Marca.formIcon },
                     ]}>
                     {item === 'entrar' ? 'ENTRAR' : item === 'cadastro' ? 'CRIAR CONTA' : 'RECUPERAR'}
                   </Text>
-                  {aba === item && <View style={[styles.abaLinha, { backgroundColor: cores.tint }]} />}
+                  {aba === item && <View style={styles.abaLinha} />}
                 </TouchableOpacity>
               ))}
             </View>
 
             {aba === 'cadastro' && (
               <>
-                <Text style={[styles.rotulo, { color: cores.icon, fontFamily: Fonts.mono }]}>NOME / RAZÃO SOCIAL</Text>
+                <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>NOME / RAZÃO SOCIAL</Text>
                 <TextInput
-                  style={[styles.input, { borderColor: cores.border, color: cores.text, fontFamily: Fonts.regular }]}
+                  style={[styles.input, { fontFamily: Fonts.regular }]}
                   placeholder="Seu nome completo"
-                  placeholderTextColor={cores.icon}
+                  placeholderTextColor={Marca.formIcon}
                   value={nome}
                   onChangeText={setNome}
                   autoCapitalize="words"
@@ -141,11 +134,11 @@ export default function LoginScreen() {
               </>
             )}
 
-            <Text style={[styles.rotulo, { color: cores.icon, fontFamily: Fonts.mono }]}>E-MAIL</Text>
+            <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>E-MAIL</Text>
             <TextInput
-              style={[styles.input, { borderColor: cores.border, color: cores.text, fontFamily: Fonts.regular }]}
+              style={[styles.input, { fontFamily: Fonts.regular }]}
               placeholder="seu@email.com"
-              placeholderTextColor={cores.icon}
+              placeholderTextColor={Marca.formIcon}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -154,11 +147,11 @@ export default function LoginScreen() {
 
             {aba !== 'recuperar' && (
               <>
-                <Text style={[styles.rotulo, { color: cores.icon, fontFamily: Fonts.mono }]}>SENHA</Text>
+                <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>SENHA</Text>
                 <TextInput
-                  style={[styles.input, { borderColor: cores.border, color: cores.text, fontFamily: Fonts.regular }]}
+                  style={[styles.input, { fontFamily: Fonts.regular }]}
                   placeholder="••••••••"
-                  placeholderTextColor={cores.icon}
+                  placeholderTextColor={Marca.formIcon}
                   value={senha}
                   onChangeText={setSenha}
                   secureTextEntry
@@ -168,34 +161,36 @@ export default function LoginScreen() {
 
             {aba === 'cadastro' && (
               <>
-                <Text style={[styles.rotulo, { color: cores.icon, fontFamily: Fonts.mono }]}>TIPO DE CONTA</Text>
+                <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>TIPO DE CONTA</Text>
                 <View style={styles.tipoGrupo}>
                   <TouchableOpacity
-                    style={[
-                      styles.tipoBotao,
-                      { borderColor: cores.border },
-                      tipo === 'cliente' && { backgroundColor: cores.tint, borderColor: cores.tint },
-                    ]}
+                    style={[styles.tipoBotao, tipo === 'cliente' && styles.tipoBotaoAtivo]}
                     onPress={() => setTipo('cliente')}>
+                    <Ionicons
+                      name="person-outline"
+                      size={14}
+                      color={tipo === 'cliente' ? Marca.formBg : Marca.formText}
+                    />
                     <Text
                       style={[
                         styles.tipoTexto,
-                        { fontFamily: Fonts.semibold, color: tipo === 'cliente' ? cores.card : cores.text },
+                        { fontFamily: Fonts.semibold, color: tipo === 'cliente' ? Marca.formBg : Marca.formText },
                       ]}>
                       Cliente
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.tipoBotao,
-                      { borderColor: cores.border },
-                      tipo === 'empresa' && { backgroundColor: cores.tint, borderColor: cores.tint },
-                    ]}
+                    style={[styles.tipoBotao, tipo === 'empresa' && styles.tipoBotaoAtivo]}
                     onPress={() => setTipo('empresa')}>
+                    <Ionicons
+                      name="business-outline"
+                      size={14}
+                      color={tipo === 'empresa' ? Marca.formBg : Marca.formText}
+                    />
                     <Text
                       style={[
                         styles.tipoTexto,
-                        { fontFamily: Fonts.semibold, color: tipo === 'empresa' ? cores.card : cores.text },
+                        { fontFamily: Fonts.semibold, color: tipo === 'empresa' ? Marca.formBg : Marca.formText },
                       ]}>
                       Empresa
                     </Text>
@@ -212,7 +207,7 @@ export default function LoginScreen() {
             />
 
             <View style={{ marginTop: 16, alignItems: 'center' }}>
-              <Emblema texto="🌱 Rede social de transparência ambiental" />
+              <Emblema texto="Rede social de transparência ambiental" icone="leaf-outline" />
             </View>
           </View>
         </ScrollView>
@@ -222,38 +217,55 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: Marca.heroBg },
   scroll: { flexGrow: 1 },
-  hero: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 28,
-    alignItems: 'flex-start',
+  hero: { paddingTop: 60, paddingBottom: 40, paddingHorizontal: 28, alignItems: 'flex-start' },
+  heroIconCirculo: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Marca.heroText,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  heroEmoji: { fontSize: 32, marginBottom: 8 },
-  heroTitulo: { fontSize: 30, color: '#faf4eb' },
-  heroTag: { fontSize: 11, letterSpacing: 2, marginTop: 6, marginBottom: 20 },
-  heroFrase: { fontSize: 16, color: '#faf4eb', lineHeight: 24 },
+  heroTitulo: { fontSize: 30, color: Marca.heroText },
+  heroTag: { fontSize: 11, letterSpacing: 2, color: Marca.heroTagText, marginTop: 6, marginBottom: 20 },
+  heroFrase: { fontSize: 16, color: Marca.heroText, lineHeight: 24 },
   formPainel: {
     flex: 1,
+    backgroundColor: Marca.formBg,
     borderRadius: Radius,
     padding: 24,
     marginTop: -16,
   },
-  formTitulo: { fontSize: 20, marginBottom: 18 },
-  abas: { flexDirection: 'row', borderBottomWidth: 1, marginBottom: 20 },
+  formTitulo: { fontSize: 20, color: Marca.formText, marginBottom: 18 },
+  abas: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Marca.formBorder, marginBottom: 20 },
   abaBotao: { marginRight: 24, paddingBottom: 10 },
   abaTexto: { fontSize: 12, letterSpacing: 1 },
-  abaLinha: { height: 2, marginTop: 8 },
-  rotulo: { fontSize: 11, letterSpacing: 1, marginBottom: 6, marginTop: 4 },
+  abaLinha: { height: 2, marginTop: 8, backgroundColor: Marca.tint },
+  rotulo: { fontSize: 11, letterSpacing: 1, color: Marca.formIcon, marginBottom: 6, marginTop: 4 },
   input: {
     borderWidth: 1,
+    borderColor: Marca.formBorder,
+    color: Marca.formText,
     borderRadius: Radius,
     padding: 13,
     fontSize: 15,
     marginBottom: 10,
   },
   tipoGrupo: { flexDirection: 'row', gap: 8, marginBottom: 6 },
-  tipoBotao: { flex: 1, borderWidth: 1, borderRadius: Radius, padding: 11, alignItems: 'center' },
+  tipoBotao: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: Marca.formBorder,
+    borderRadius: Radius,
+    padding: 11,
+  },
+  tipoBotaoAtivo: { backgroundColor: Marca.tint, borderColor: Marca.tint },
   tipoTexto: { fontSize: 13 },
 });

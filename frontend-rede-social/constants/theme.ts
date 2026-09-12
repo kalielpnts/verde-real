@@ -42,3 +42,19 @@ export const Fonts = {
   bold: 'Inter_700Bold',
   mono: 'SpaceMono_400Regular',
 };
+
+// Cores FIXAS da marca — não mudam com o tema claro/escuro do celular.
+// Usadas em telas que replicam um trecho do site 1:1 (o site não tem modo escuro).
+export const Marca = {
+  heroBg: '#305750',
+  heroText: '#faf4eb',
+  heroTagText: '#d8e6e1',
+  formBg: '#ffffff',
+  formText: '#1e2b2b',
+  formBorder: 'rgba(48, 87, 80, 0.25)',
+  formIcon: '#6f9287',
+  formSecondary: '#305750',
+  tint: '#407a6c',
+  accent: '#c9a959',
+  danger: '#c62828',
+};

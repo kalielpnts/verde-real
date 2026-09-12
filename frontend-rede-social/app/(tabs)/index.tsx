@@ -19,6 +19,7 @@ import { useSocket } from '@/src/contexts/SocketContext';
 import { CATEGORIAS } from '@/src/constants/categorias';
 import { alternarCurtida, buscarPosts } from '@/src/services/posts';
 import { Post } from '@/src/types';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function FeedScreen() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
@@ -96,7 +97,10 @@ export default function FeedScreen() {
       <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
 
       <View style={[styles.header, { borderBottomColor: cores.border }]}>
-        <Text style={[styles.headerTitulo, { color: cores.secondary, fontFamily: Fonts.bold }]}>🌱 Verde Real</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="leaf" size={18} color={cores.secondary} />
+          <Text style={[styles.headerTitulo, { color: cores.secondary, fontFamily: Fonts.bold }]}>Verde Real</Text>
+        </View>
         {usuario && (
           <Text style={[styles.headerSaudacao, { color: cores.icon, fontFamily: Fonts.mono }]}>
             OLÁ, {usuario.nome.split(' ')[0].toUpperCase()}
