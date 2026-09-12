@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -24,12 +25,21 @@ function formatarData(iso: string) {
   })}`;
 }
 
-export function PostCard({ post, onCurtir }: { post: Post; onCurtir: (id: string) => void }) {
+export function PostCard({
+  post,
+  onCurtir,
+  onPress,
+}: {
+  post: Post;
+  onCurtir: (id: string) => void;
+  onPress?: () => void;
+}) {
+  const router = useRouter();
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
   return (
-    <View style={styles.wrapper}>
+    <TouchableOpacity style={styles.wrapper} activeOpacity={0.85} onPress={onPress} disabled={!onPress}>
       <Cartao style={styles.card}>
         <View style={styles.cabecalho}>
           <View style={[styles.avatar, { backgroundColor: cores.tintSoft, borderColor: cores.border }]}>
@@ -58,12 +68,14 @@ export function PostCard({ post, onCurtir }: { post: Post; onCurtir: (id: string
         </View>
 
         {post.empresa && (
-          <View style={[styles.empresaTag, { borderColor: cores.danger }]}>
+          <TouchableOpacity
+            style={[styles.empresaTag, { borderColor: cores.danger }]}
+            onPress={() => router.push({ pathname: '/empresa/[id]', params: { id: post.empresa!.id } })}>
             <Ionicons name="business-outline" size={13} color={cores.danger} />
             <Text style={[styles.empresaTexto, { color: cores.danger, fontFamily: Fonts.semibold }]}>
               Sobre: {post.empresa.nome}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
 
         <Text style={[styles.conteudo, { color: cores.text, fontFamily: Fonts.regular }]}>{post.conteudo}</Text>
@@ -102,7 +114,7 @@ export function PostCard({ post, onCurtir }: { post: Post; onCurtir: (id: string
           </Text>
         </TouchableOpacity>
       </Cartao>
-    </View>
+    </TouchableOpacity>
   );
 }
 

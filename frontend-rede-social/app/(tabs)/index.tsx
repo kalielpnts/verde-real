@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
@@ -22,6 +23,7 @@ import { Post } from '@/src/types';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function FeedScreen() {
+  const router = useRouter();
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const { usuario } = useAuth();
@@ -140,7 +142,9 @@ export default function FeedScreen() {
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <PostCard post={item} onCurtir={handleCurtir} />}
+          renderItem={({ item }) => (
+  <PostCard post={item} onCurtir={handleCurtir} onPress={() => router.push({ pathname: '/denuncia/[id]', params: { id: item.id } })} />
+)}
           contentContainerStyle={{ paddingTop: 14, paddingBottom: 20, flexGrow: 1 }}
           refreshing={atualizando}
           onRefresh={() => {

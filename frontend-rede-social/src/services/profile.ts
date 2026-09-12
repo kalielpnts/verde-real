@@ -10,3 +10,15 @@ export async function atualizarAvatar(usuarioId: string, avatarUrl: string) {
   if (error) throw new Error(error.message);
   return data;
 }
+export async function buscarPerfilPorId(id: string) {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return {
+    id: data.id,
+    nome: data.nome,
+    email: data.email,
+    tipo: data.tipo,
+    avatarUrl: data.avatar_url,
+    bio: data.bio,
+  };
+}

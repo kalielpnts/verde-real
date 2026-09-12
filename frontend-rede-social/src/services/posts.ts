@@ -53,23 +53,43 @@ export async function buscarPosts(usuarioId: string | null, categoria?: string |
 
   let idsCurtidos = new Set<string>();
   if (usuarioId && data && data.length > 0) {
-    const { data: curtidas } = await supabase
-      .from('curtidas')
-      .select('post_id')
-      .eq('user_id', usuarioId);
+    const { data: curtidas } = await supabase.from('curtidas').select('post_id').eq('user_id', usuarioId);
     idsCurtidos = new Set((curtidas ?? []).map((c) => c.post_id));
   }
 
   return (data ?? []).map((linha) => mapearPost(linha, idsCurtidos));
 }
 
-export async function alternarCurtida(usuarioId: string, postId: string, curtidoAtualmente: boolean) {
-  if (curtidoAtualmente) {
-    const { error } = await supabase
+export async function buscarPostPorId(postId: string, usuarioId: string | null): Promise<Post | null> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(
+      `*,
+      autor:profiles!posts_autor_id_fkey(*),
+      empresa:profiles!posts_empresa_id_fkey(*),
+      curtidas(count)`
+    )
+    .eq('id', postId)
+    .single();
+
+  if (error || !data) return null;
+
+  let idsCurtidos = new Set<string>();
+  if (usuarioId) {
+    const { data: curtidas } = await supabase
       .from('curtidas')
-      .delete()
+      .select('post_id')
       .eq('user_id', usuarioId)
       .eq('post_id', postId);
+    idsCurtidos = new Set((curtidas ?? []).map((c) => c.post_id));
+  }
+
+  return mapearPost(data, idsCurtidos);
+}
+
+export async function alternarCurtida(usuarioId: string, postId: string, curtidoAtualmente: boolean) {
+  if (curtidoAtualmente) {
+    const { error } = await supabase.from('curtidas').delete().eq('user_id', usuarioId).eq('post_id', postId);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase.from('curtidas').insert({ user_id: usuarioId, post_id: postId });
@@ -110,4 +130,21 @@ export async function buscarEmpresas(termo: string) {
     .limit(8);
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+export async function buscarPostsPorEmpresa(empresaId: string, usuarioId: string | null): Promise<Post[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`*, autor:profiles!posts_autor_id_fkey(*), empresa:profiles!posts_empresa_id_fkey(*), curtidas(count)`)
+    .eq('empresa_id', empresaId)
+    .order('criado_em', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  let idsCurtidos = new Set<string>();
+  if (usuarioId && data && data.length > 0) {
+    const { data: curtidas } = await supabase.from('curtidas').select('post_id').eq('user_id', usuarioId);
+    idsCurtidos = new Set((curtidas ?? []).map((c) => c.post_id));
+  }
+
+  return (data ?? []).map((linha) => mapearPost(linha, idsCurtidos));
 }
