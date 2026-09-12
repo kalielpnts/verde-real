@@ -14,6 +14,7 @@ interface AuthContextValue {
     senha: string,
     tipo: 'cliente' | 'empresa'
   ) => Promise<{ precisaConfirmarEmail: boolean }>;
+  recuperarSenha: (email: string) => Promise<void>;
   sair: () => Promise<void>;
   atualizarUsuario: (dados: Partial<Usuario>) => void;
 }
@@ -113,6 +114,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { precisaConfirmarEmail: !data.session };
   }
 
+  async function recuperarSenha(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {
+      redirectTo: 'verde-real://redefinir-senha',
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+    // Por segurança, não revelamos se o email existe ou não.
+  }
+
   async function sair() {
     await supabase.auth.signOut();
     setUsuario(null);
@@ -124,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value = useMemo(
-    () => ({ usuario, token, carregando, entrar, cadastrar, sair, atualizarUsuario }),
+    () => ({ usuario, token, carregando, entrar, cadastrar, recuperarSenha, sair, atualizarUsuario }),
     [usuario, token, carregando]
   );
 

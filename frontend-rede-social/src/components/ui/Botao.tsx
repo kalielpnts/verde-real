@@ -21,7 +21,7 @@ export function Botao({
   desabilitado = false,
   style,
 }: BotaoProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
   const corFundo =
