@@ -12,18 +12,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EstadoVazio } from '@/components/estado-vazio';
 import { PostCard } from '@/components/post-card';
-import { Colors } from '@/constants/theme';
+import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useSocket } from '@/src/contexts/SocketContext';
 import { CATEGORIAS } from '@/src/constants/categorias';
-import { api } from '@/src/services/api';
+import { alternarCurtida, buscarPosts } from '@/src/services/posts';
 import { Post } from '@/src/types';
 
 export default function FeedScreen() {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
-  const { token, usuario } = useAuth();
+  const { usuario } = useAuth();
   const socket = useSocket();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -35,7 +35,7 @@ export default function FeedScreen() {
     async (mostrarSpinner = true) => {
       if (mostrarSpinner) setCarregando(true);
       try {
-        const dados = await api.listarPosts(token, categoriaFiltro ?? undefined);
+        const dados = await buscarPosts(usuario?.id ?? null, categoriaFiltro);
         setPosts(dados);
       } catch (error) {
         console.error(error);
@@ -44,7 +44,7 @@ export default function FeedScreen() {
         setAtualizando(false);
       }
     },
-    [token, categoriaFiltro]
+    [usuario?.id, categoriaFiltro]
   );
 
   useEffect(() => {
@@ -61,23 +61,17 @@ export default function FeedScreen() {
       });
     }
 
-    function aoCurtir({ postId, totalCurtidas }: { postId: string; totalCurtidas: number }) {
-      setPosts((atual) => atual.map((p) => (p.id === postId ? { ...p, totalCurtidas } : p)));
-    }
-
     socket.on('novo_post', aoReceberPost);
-    socket.on('post_curtido', aoCurtir);
-
     return () => {
       socket.off('novo_post', aoReceberPost);
-      socket.off('post_curtido', aoCurtir);
     };
   }, [socket, categoriaFiltro]);
 
   async function handleCurtir(postId: string) {
-    if (!token) return;
+    if (!usuario) return;
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
 
-    // Atualização otimista: reflete na hora, corrige depois se o backend discordar
     setPosts((atual) =>
       atual.map((p) =>
         p.id === postId
@@ -91,7 +85,7 @@ export default function FeedScreen() {
     );
 
     try {
-      await api.curtirPost(token, postId);
+      await alternarCurtida(usuario.id, postId, post.curtidoPorMim);
     } catch (error) {
       carregarPosts(false);
     }
@@ -102,8 +96,12 @@ export default function FeedScreen() {
       <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
 
       <View style={[styles.header, { borderBottomColor: cores.border }]}>
-        <Text style={[styles.headerTitulo, { color: cores.tint }]}>Verde Real 🌿</Text>
-        {usuario && <Text style={[styles.headerSaudacao, { color: cores.icon }]}>Olá, {usuario.nome.split(' ')[0]}</Text>}
+        <Text style={[styles.headerTitulo, { color: cores.secondary, fontFamily: Fonts.bold }]}>🌱 Verde Real</Text>
+        {usuario && (
+          <Text style={[styles.headerSaudacao, { color: cores.icon, fontFamily: Fonts.mono }]}>
+            OLÁ, {usuario.nome.split(' ')[0].toUpperCase()}
+          </Text>
+        )}
       </View>
 
       <FlatList
@@ -119,12 +117,14 @@ export default function FeedScreen() {
               style={[
                 styles.chip,
                 {
-                  backgroundColor: ativo ? cores.tint : cores.tintSoft,
+                  backgroundColor: ativo ? cores.tint : 'transparent',
                   borderColor: ativo ? cores.tint : cores.border,
                 },
               ]}
               onPress={() => setCategoriaFiltro(item === 'Todas' ? null : item)}>
-              <Text style={[styles.chipTexto, { color: ativo ? '#fff' : cores.text }]}>{item}</Text>
+              <Text style={[styles.chipTexto, { color: ativo ? cores.card : cores.text, fontFamily: Fonts.semibold }]}>
+                {item.toUpperCase()}
+              </Text>
             </TouchableOpacity>
           );
         }}
@@ -137,7 +137,7 @@ export default function FeedScreen() {
           data={posts}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <PostCard post={item} onCurtir={handleCurtir} />}
-          contentContainerStyle={{ paddingTop: 10, paddingBottom: 20, flexGrow: 1 }}
+          contentContainerStyle={{ paddingTop: 14, paddingBottom: 20, flexGrow: 1 }}
           refreshing={atualizando}
           onRefresh={() => {
             setAtualizando(true);
@@ -166,15 +166,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
   },
-  headerTitulo: { fontSize: 20, fontWeight: '800' },
-  headerSaudacao: { fontSize: 13 },
+  headerTitulo: { fontSize: 20 },
+  headerSaudacao: { fontSize: 11 },
   filtros: { paddingHorizontal: 15, paddingVertical: 10, gap: 8 },
   chip: {
     paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
+    paddingVertical: 8,
+    borderRadius: Radius,
     borderWidth: 1,
     marginRight: 8,
   },
-  chipTexto: { fontSize: 12, fontWeight: '600' },
+  chipTexto: { fontSize: 11, letterSpacing: 0.5 },
 });

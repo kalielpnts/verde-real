@@ -15,16 +15,20 @@ export type Categoria =
   | 'Fauna'
   | 'Outro';
 
+export type StatusDenuncia = 'recebida' | 'em_analise' | 'resolvida' | 'rejeitada';
+
 export interface Post {
   id: string;
   conteudo: string;
   categoria: Categoria;
+  status: StatusDenuncia;
   midiaUrl?: string | null;
   tipoMidia?: 'imagem' | 'video' | null;
   latitude?: number | null;
   longitude?: number | null;
   criadoEm: string;
   autor: Usuario;
+  empresa?: Usuario | null;
   totalCurtidas: number;
   curtidoPorMim: boolean;
 }
