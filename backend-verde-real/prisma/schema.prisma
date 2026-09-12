@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabela de Usuários
+model User {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  avatarUrl String?
+  criadoEm  DateTime @default(now())
+
+  posts     Post[]
+  curtidas  Curtida[]
+}
+
+// Tabela de Postagens (Denúncias - Texto e Fotos/Vídeos)
+model Post {
+  id        String   @id @default(uuid())
+  conteudo  String
+  categoria String   @default("Outro")
+  midiaUrl  String?  // URL pública do arquivo no Supabase Storage
+  tipoMidia String?  // "imagem" ou "video"
+  latitude  Float?
+  longitude Float?
+  criadoEm  DateTime @default(now())
+
+  autorId   String
+  autor     User     @relation(fields: [autorId], references: [id])
+
+  curtidas  Curtida[]
+}
+
+// Tabela de Curtidas (evita curtida duplicada do mesmo usuário no mesmo post)
+model Curtida {
+  id        String   @id @default(uuid())
+  criadoEm  DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
