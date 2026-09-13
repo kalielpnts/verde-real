@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -36,15 +37,20 @@ export default function FeedScreen() {
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
   const [naoLidas, setNaoLidas] = useState(0);
 
-  useEffect(() => {
-    if (!usuario) {
-      setNaoLidas(0);
-      return;
-    }
-    contarNaoLidas(usuario.id)
-      .then(setNaoLidas)
-      .catch(() => {});
+    useFocusEffect(
+    useCallback(() => {
+      if (!usuario) {
+        setNaoLidas(0);
+        return;
+      }
+      contarNaoLidas(usuario.id)
+        .then(setNaoLidas)
+        .catch(() => {});
+    }, [usuario])
+  );
 
+  useEffect(() => {
+    if (!usuario) return;
     return ouvirNovasNotificacoes(usuario.id, () => setNaoLidas((atual) => atual + 1));
   }, [usuario]);
 

@@ -22,7 +22,6 @@ import {
   marcarComoLida,
   marcarTodasComoLidas,
   ouvirNovasNotificacoes,
-  registrarPushToken,
 } from '@/src/services/notificacoes';
 import { Notificacao, TipoNotificacao } from '@/src/types';
 
@@ -65,12 +64,9 @@ export default function NotificacoesScreen() {
     }
   }, [usuario]);
 
-  useEffect(() => {
+    useEffect(() => {
     carregar();
-    if (usuario) {
-      registrarPushToken(usuario.id);
-    }
-  }, [carregar, usuario]);
+  }, [carregar]);
 
   useEffect(() => {
     if (!usuario?.id) return;
