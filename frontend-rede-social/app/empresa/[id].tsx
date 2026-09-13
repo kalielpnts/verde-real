@@ -13,7 +13,12 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { buscarPerfilPorId } from '@/src/services/profile';
 import { alternarCurtida, buscarPostsPorEmpresa } from '@/src/services/posts';
-import { contarSeguidores, deixarDeSeguir, estaSeguindo, seguirEmpresa } from '@/src/services/seguidores';
+import {
+  contarSeguidores,
+  deixarDeSeguir,
+  estaSeguindo,
+  seguirEmpresa,
+} from '@/src/services/seguidores';
 import { Selo, buscarSelosDaEmpresa } from '@/src/services/selos';
 import { Post } from '@/src/types';
 
@@ -39,11 +44,11 @@ export default function PerfilEmpresaScreen() {
   const [carregando, setCarregando] = useState(true);
   const [seguindo, setSeguindo] = useState(false);
   const [totalSeguidores, setTotalSeguidores] = useState(0);
-  const [alternandoSeguir, setAlternandoSeguir] = useState(false);
+  const [carregandoSeguir, setCarregandoSeguir] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!id) return;
-    const [perfil, listaSelos, listaPosts, seguidoresCount] = await Promise.all([
+    const [perfil, listaSelos, listaPosts, total] = await Promise.all([
       buscarPerfilPorId(id),
       buscarSelosDaEmpresa(id),
       buscarPostsPorEmpresa(id, usuario?.id ?? null),
@@ -52,36 +57,36 @@ export default function PerfilEmpresaScreen() {
     setEmpresa(perfil);
     setSelos(listaSelos);
     setPosts(listaPosts);
-    setTotalSeguidores(seguidoresCount);
+    setTotalSeguidores(total);
     if (usuario) {
       setSeguindo(await estaSeguindo(usuario.id, id));
     }
     setCarregando(false);
-  }, [id, usuario?.id]);
-
-  async function handleAlternarSeguir() {
-    if (!usuario || !id || alternandoSeguir) return;
-    setAlternandoSeguir(true);
-    const seguindoAntes = seguindo;
-    setSeguindo(!seguindoAntes);
-    setTotalSeguidores((atual) => (seguindoAntes ? atual - 1 : atual + 1));
-    try {
-      if (seguindoAntes) {
-        await deixarDeSeguir(usuario.id, id);
-      } else {
-        await seguirEmpresa(usuario.id, id);
-      }
-    } catch (error) {
-      setSeguindo(seguindoAntes);
-      setTotalSeguidores((atual) => (seguindoAntes ? atual + 1 : atual - 1));
-    } finally {
-      setAlternandoSeguir(false);
-    }
-  }
+  }, [id, usuario]);
 
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  async function handleSeguir() {
+    if (!usuario || !id) return;
+    setCarregandoSeguir(true);
+    try {
+      if (seguindo) {
+        await deixarDeSeguir(usuario.id, id);
+        setSeguindo(false);
+        setTotalSeguidores((n) => Math.max(0, n - 1));
+      } else {
+        await seguirEmpresa(usuario.id, id);
+        setSeguindo(true);
+        setTotalSeguidores((n) => n + 1);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCarregandoSeguir(false);
+    }
+  }
 
   async function handleCurtir(postId: string) {
     if (!usuario) return;
@@ -160,11 +165,11 @@ export default function PerfilEmpresaScreen() {
 
           {usuario && usuario.id !== empresa.id && (
             <Botao
-              titulo={seguindo ? 'Seguindo' : 'Seguir'}
+              titulo={seguindo ? 'Deixar de seguir' : 'Seguir empresa'}
+              onPress={handleSeguir}
+              carregando={carregandoSeguir}
               variante={seguindo ? 'secundario' : 'primario'}
-              onPress={handleAlternarSeguir}
-              carregando={alternandoSeguir}
-              style={{ marginTop: 14, width: 160 }}
+              style={{ marginTop: 14, alignSelf: 'stretch', marginHorizontal: 40 }}
             />
           )}
         </View>
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: '100%', height: '100%' },
   nome: { fontSize: 19, marginTop: 12, textAlign: 'center', paddingHorizontal: 20 },
-  seguidoresTexto: { fontSize: 10, letterSpacing: 0.8, marginTop: 6 },
+  seguidoresTexto: { fontSize: 10, letterSpacing: 1, marginTop: 8 },
   selosArea: { paddingHorizontal: 15, marginBottom: 10 },
   secaoTitulo: { fontSize: 15, marginBottom: 10 },
   seloLinha: { flexDirection: 'row', alignItems: 'center', gap: 8, borderBottomWidth: 1, paddingVertical: 8 },
