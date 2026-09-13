@@ -19,6 +19,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useSocket } from '@/src/contexts/SocketContext';
 import { CATEGORIAS } from '@/src/constants/categorias';
 import { alternarCurtida, buscarPosts } from '@/src/services/posts';
+import { contarNaoLidas, ouvirNovasNotificacoes } from '@/src/services/notificacoes';
 import { Post } from '@/src/types';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -33,6 +34,19 @@ export default function FeedScreen() {
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
+  const [naoLidas, setNaoLidas] = useState(0);
+
+  useEffect(() => {
+    if (!usuario) {
+      setNaoLidas(0);
+      return;
+    }
+    contarNaoLidas(usuario.id)
+      .then(setNaoLidas)
+      .catch(() => {});
+
+    return ouvirNovasNotificacoes(usuario.id, () => setNaoLidas((atual) => atual + 1));
+  }, [usuario]);
 
   const carregarPosts = useCallback(
     async (mostrarSpinner = true) => {
@@ -103,11 +117,26 @@ export default function FeedScreen() {
           <Ionicons name="leaf" size={18} color={cores.secondary} />
           <Text style={[styles.headerTitulo, { color: cores.secondary, fontFamily: Fonts.bold }]}>Verde Real</Text>
         </View>
-        {usuario && (
-          <Text style={[styles.headerSaudacao, { color: cores.icon, fontFamily: Fonts.mono }]}>
-            OLÁ, {usuario.nome.split(' ')[0].toUpperCase()}
-          </Text>
-        )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          {usuario && (
+            <Text style={[styles.headerSaudacao, { color: cores.icon, fontFamily: Fonts.mono }]}>
+              OLÁ, {usuario.nome.split(' ')[0].toUpperCase()}
+            </Text>
+          )}
+          {usuario && (
+            <TouchableOpacity
+              onPress={() => router.push('/notificacoes')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{ position: 'relative' }}>
+              <Ionicons name="notifications-outline" size={22} color={cores.text} />
+              {naoLidas > 0 && (
+                <View style={[styles.badge, { backgroundColor: cores.danger }]}>
+                  <Text style={styles.badgeTexto}>{naoLidas > 9 ? '9+' : naoLidas}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <FlatList
@@ -176,6 +205,18 @@ const styles = StyleSheet.create({
   },
   headerTitulo: { fontSize: 20 },
   headerSaudacao: { fontSize: 11 },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeTexto: { color: '#fff', fontSize: 9, fontWeight: '700' },
   filtros: { paddingHorizontal: 15, paddingVertical: 10, gap: 8 },
   chip: {
     paddingHorizontal: 14,

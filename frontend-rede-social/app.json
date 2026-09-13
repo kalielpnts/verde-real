@@ -60,6 +60,13 @@
           "locationWhenInUsePermission": "Usado para anexar o local da denúncia, quando você escolher compartilhar."
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#407a6c"
+        }
+      ],
       "expo-font",
       "expo-image",
       "expo-status-bar",
@@ -68,6 +75,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
     }
   }
 }

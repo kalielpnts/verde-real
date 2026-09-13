@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
+import { registrarPushToken } from '@/src/services/notificacoes';
 import { supabase } from '@/src/services/supabase';
 import { Usuario } from '@/src/types';
 
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error || !data) return null;
     const u = mapearPerfil(data);
     setUsuario(u);
+    registrarPushToken(u.id).catch((erroPush) => console.warn('Push token:', erroPush));
     return u;
   }
 
